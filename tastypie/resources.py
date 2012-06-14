@@ -2,6 +2,7 @@ from __future__ import with_statement
 import logging
 import warnings
 import django
+import ast
 from django.conf import settings
 from django.conf.urls.defaults import patterns, url
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned, ValidationError
@@ -1549,6 +1550,8 @@ class ModelResource(Resource):
             result = fields.FileField
         elif internal_type == 'TimeField':
             result = fields.TimeField
+        elif internal_type == 'ListField':
+            result = fields.ListField
         # TODO: Perhaps enable these via introspection. The reason they're not enabled
         #       by default is the very different ``__init__`` they have over
         #       the other fields.
@@ -1680,9 +1683,12 @@ class ModelResource(Resource):
         if filter_type in ('in', 'range') and len(value):
             if hasattr(filters, 'getlist'):
                 value = []
-
                 for part in filters.getlist(filter_expr):
-                    value.extend(part.split(','))
+                    parsed = ast.literal_eval(part)
+                    try:
+                        value.extend(parsed)
+                    except TypeError:
+                        value.append(parsed)
             else:
                 value = value.split(',')
 
