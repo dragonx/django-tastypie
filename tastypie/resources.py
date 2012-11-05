@@ -319,7 +319,6 @@ class Resource(object):
         urls = self.prepend_urls()
 
         if self.override_urls():
-            warnings.warn("'override_urls' is a deprecated method & will be removed by v1.0.0. Please rename your method to ``prepend_urls``.")
             urls += self.override_urls()
 
         urls += self.base_urls()
