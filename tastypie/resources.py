@@ -41,6 +41,11 @@ try:
 except ImportError:
     def csrf_exempt(func):
         return func
+try:
+    from django.views.decorators.http import condition 
+except ImportError:
+    def condition(func):
+        return func
 
 # Django 1.5 has moved this constant up one level.
 try:
@@ -196,6 +201,14 @@ class Resource(object):
         are seen, there is special handling to either present a message back
         to the user or return the response traveling with the exception.
         """
+        def etag_func(*args, **kwargs):
+            return self.etag_func(*args, **kwargs)
+
+        def last_modified_func(*args, **kwargs):
+            return self.last_modified_func(*args, **kwargs)
+
+        @condition(etag_func=etag_func,
+                   last_modified_func=last_modified_func)
         @csrf_exempt
         def wrapper(request, *args, **kwargs):
             try:
@@ -430,6 +443,12 @@ class Resource(object):
         Useful for altering the user data before any hydration is applied.
         """
         return data
+
+    def etag_func(self, request, *args, **kwargs):
+        return None
+
+    def last_modified_func(self, request, *args, **kwargs):
+        return None
 
     def dispatch_list(self, request, **kwargs):
         """
